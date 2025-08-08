@@ -1,124 +1,128 @@
-# Text-to-Image Generator with Chain-of-Thought and Diffusion
 
-## Overview
+# 🧠💡 Text-to-Image Generation Pipeline using Chain-of-Thought and Diffusion Models
 
-This project implements an AI pipeline that integrates:
-
-- **Chain-of-Thought (CoT) Model**: Enhances user prompts by generating detailed and contextually rich text descriptions.
-- **Diffusion Model (DDPM)**: Generates images from refined text prompts.
-- **Context Window Extension**: Supports multi-turn conversations by retaining dialogue history.
+This project implements a **Text-to-Image Generation Pipeline** that first enhances user prompts through a **Chain-of-Thought (CoT) reasoning model**, and then generates corresponding images using a **Diffusion-based generative model**. The pipeline is designed for creative applications such as storytelling, concept visualization, and generative AI tasks.
 
 ---
 
-## Directory Structure
+## 📌 Features
 
-```
-project/
-├── models/
-│   ├── attention.py         # Self-Attention and Cross-Attention mechanisms
-│   ├── transformer.py       # Transformer model for Chain-of-Thought
-│   ├── diffusion.py         # UNet and noise prediction logic
-│   └── VAen_decoder.py      # Variational Autoencoder (VAE) encoder and decoder
-├── sampler/
-│   └── ddpm.py              # Denoising Diffusion Probabilistic Model (DDPM) sampling logic
-├── COT_text_gen.py          # ImprovedChainOfThought model for text generation
-├── pipeline.py              # Image generation function (generate)
-├── train.py                 # Training script for the diffusion model
-├── vocab.txt                # Vocabulary file for the CoT model
-├── input.txt                # Sample test input file
-├── combined_pipeline.py     # Integrated pipeline combining CoT and diffusion
-└── README.md                # Project documentation
-```
+- **ImprovedChainOfThought** model for expanding prompts using step-by-step reasoning.
+- **CLIP-based tokenizer and encoder** to transform text into latent space.
+- **VAE Encoder–Decoder** structure for image representation and generation.
+- **DDPM Sampler** (Denoising Diffusion Probabilistic Models) for high-quality image synthesis.
+- Configurable pipeline: supports CFG scale, strength, inference steps, and random seed control.
 
 ---
 
-## Getting Started
+## 🔍 Model Explanation
 
-### 1. Environment Setup
-
-```bash
-pip install torch torchvision transformers tqdm
-```
-
-### 2. Model Initialization
-
-```python
-from COT_text_gen import ImprovedChainOfThought
-from pipeline import generate
-from combined_pipeline import TextToImagePipeline
-
-# Initialize the Chain-of-Thought model
-text_model = ImprovedChainOfThought(...)
-
-# Initialize the text-to-image pipeline
-pipe = TextToImagePipeline(
-    text_gen_model=text_model,
-    diffusion_pipeline=generate,
-    device='cuda'
-)
-```
-
-### 3. Generating Images
-
-```python
-image = pipe("Draw a cat studying", seed=42)
-image.save("output.png")
-```
+| Component        | Description                                                                 |
+|------------------|-----------------------------------------------------------------------------|
+| **CoT Model**    | A Transformer-based model that generates detailed prompts using Chain-of-Thought reasoning to improve image relevance. |
+| **CLIP**         | Converts text into a latent embedding space compatible with the diffusion model. |
+| **VAE Encoder**  | Compresses image features into a latent representation.                     |
+| **VAE Decoder**  | Reconstructs images from latent vectors after sampling.                     |
+| **DDPM**         | Diffusion-based image generator that denoises latent space into realistic images. |
 
 ---
 
-## Key Features
+## 🧩 Architecture Overview
 
-- **Prompt Enhancement**: Automatically refines vague user prompts using Chain-of-Thought reasoning.
-- **High-Quality Image Generation**: Utilizes a diffusion-based UNet model with DDPM sampling.
-- **Conversation Memory**: Supports multi-turn dialogues by maintaining context history.
-- **Configurable Parameters**: Adjustable settings for `n_steps`, `strength`, and more.
-
----
-
-## Model Explanation
-
-This project follows a two-stage AI pipeline:
-
-1. **Text Understanding & Enhancement (Chain-of-Thought Model)**
-   - The input text from the user is processed by the `ImprovedChainOfThought` transformer.
-   - The model expands the prompt with richer context and more descriptive details.  
-     *Example*: "Draw a cat" → "A fluffy white cat sitting on a wooden table, sunlight streaming through a window."
-   - This step ensures the diffusion model receives more detailed guidance for image generation.
-
-2. **Image Generation (Diffusion + UNet + VAE)**
-   - **Text Encoding**: The enhanced prompt is transformed into an embedding vector (using the internal text encoder of the pipeline).
-   - **Noise Initialization**: The diffusion process starts from pure Gaussian noise.
-   - **UNet Denoising**: The UNet predicts the noise at each timestep, guided by the text embedding.
-   - **DDPM Sampling**: The sampler gradually denoises the latent representation into a meaningful image.
-   - **VAE Decoding**: The latent image is decoded into full-resolution pixel space.
-
-**Data Flow Diagram:**
 ```
 User Prompt
    ↓
-Chain-of-Thought Transformer
+[Chain-of-Thought Reasoning]
    ↓
-Enhanced Prompt → Text Encoder → Diffusion UNet + DDPM Sampler
+Refined Prompt (e.g., “A dog eating a hotdog in Central Park”)
    ↓
-VAE Decoder → Final Image
+[CLIP Tokenizer & Encoder]
+   ↓
+[Diffusion-based Image Generator]
+   ↓
+Generated Image Output (RGB)
 ```
 
-**Why This Architecture Works:**
-- The Chain-of-Thought stage ensures vague prompts are turned into vivid descriptions, improving the guidance for the diffusion model.
-- UNet with self-attention and cross-attention layers captures both global composition and fine details.
-- The VAE enables computation in a smaller latent space, making training and inference faster without significant quality loss.
+---
+
+## 🔧 Setup Instructions
+
+### 1. Install Dependencies
+
+```bash
+pip install torch torchvision transformers Pillow
+```
+
+### 2. Download Pretrained Models
+
+#### 📥 Get Stable Diffusion v1.5 Checkpoint
+
+- Visit: [Stable Diffusion v1-5 Hugging Face](https://huggingface.co/stable-diffusion-v1-5/stable-diffusion-v1-5/tree/main)
+- Download file: `v1-5-pruned-emaonly.ckpt`
+- Save it to:  
+  ```bash
+  diffusion_model/data/v1-5-pruned-emaonly.ckpt
+  ```
+
+### 3. Required Model Files
+
+Ensure the following files exist:
+
+```
+model.pth                   # Chain-of-Thought model checkpoint
+diffusion_model.pth         # DDPM model weights
+vae_encoder.pth             # VAE encoder weights
+vae_decoder.pth             # VAE decoder weights
+clip_model.pth              # CLIP model weights
+```
+
+> ⚠️ If these files are missing, the pipeline will fallback to untrained models and results may be poor.
 
 ---
 
-## Notes
+## 🚀 Running the Pipeline
 
-- **Hardware Requirements**: A GPU with at least 8GB VRAM is recommended for efficient diffusion model inference.
-- **Training**: To retrain the diffusion model, use the `train.py` script.
-- **Data Files**: Ensure `vocab.txt` (CoT vocabulary) and `input.txt` (test inputs) are available in the project directory.
+```bash
+python pipeline.py
+```
+
+This will:
+- Accept a user prompt
+- Expand it using Chain-of-Thought reasoning
+- Generate an image using the diffusion model
+- Save the image as `output.png`
 
 ---
 
-## Author
+## 📁 File Structure
 
-- **Developer**: Bao
+```
+.
+├── pipeline.py
+├── Chain_Of_Thought/
+│   └── COT_text_gen.py
+├── diffusion_model/
+│   ├── pipeline.py
+│   ├── clip.py
+│   ├── diffusion.py
+│   ├── ddpm.py
+│   ├── VAen_decoder.py
+│   └── data/
+│       └── v1-5-pruned-emaonly.ckpt   # Stable Diffusion weights
+├── model.pth
+├── output.png
+```
+
+---
+
+## 📚 License
+
+This project is intended for **research and educational purposes** only. Contact the author for commercial use.
+
+---
+
+## 👨‍💻 Author
+
+**[Your Name]**  
+AI Researcher / Developer  
+📫 [your-email@example.com] | GitHub: [your-profile]

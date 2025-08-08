@@ -5,7 +5,7 @@
 This project implements an AI pipeline that integrates:
 
 - **Chain-of-Thought (CoT) Model**: Enhances user prompts by generating detailed and contextually rich text descriptions.
-- **Diffusion Model (DDPM)**: Generates high-quality images from refined text prompts.
+- **Diffusion Model (DDPM)**: Generates images from refined text prompts.
 - **Context Window Extension**: Supports multi-turn conversations by retaining dialogue history.
 
 ---
@@ -36,8 +36,6 @@ project/
 
 ### 1. Environment Setup
 
-Install the required dependencies:
-
 ```bash
 pip install torch torchvision transformers tqdm
 ```
@@ -48,10 +46,6 @@ pip install torch torchvision transformers tqdm
 from COT_text_gen import ImprovedChainOfThought
 from pipeline import generate
 from combined_pipeline import TextToImagePipeline
-from transformers import CLIPTokenizer
-
-# Load the CLIP tokenizer
-tokenizer = CLIPTokenizer.from_pretrained("openai/clip-vit-base-patch32")
 
 # Initialize the Chain-of-Thought model
 text_model = ImprovedChainOfThought(...)
@@ -60,14 +54,11 @@ text_model = ImprovedChainOfThought(...)
 pipe = TextToImagePipeline(
     text_gen_model=text_model,
     diffusion_pipeline=generate,
-    tokenizer=tokenizer,
     device='cuda'
 )
 ```
 
 ### 3. Generating Images
-
-Generate an image from a simple text prompt:
 
 ```python
 image = pipe("Draw a cat studying", seed=42)
@@ -81,36 +72,42 @@ image.save("output.png")
 - **Prompt Enhancement**: Automatically refines vague user prompts using Chain-of-Thought reasoning.
 - **High-Quality Image Generation**: Utilizes a diffusion-based UNet model with DDPM sampling.
 - **Conversation Memory**: Supports multi-turn dialogues by maintaining context history.
-- **Configurable Parameters**: Adjustable settings for `cfg_scale`, `n_steps`, `strength`, and more.
+- **Configurable Parameters**: Adjustable settings for `n_steps`, `strength`, and more.
 
 ---
 
-## Model Components
+## Model Explanation
 
-| Component                  | Description                                      |
-|---------------------------|--------------------------------------------------|
-| `ImprovedChainOfThought`  | Generates text with reasoning-based augmentation |
-| `Diffusion` + `UNet`      | Predicts and removes noise for image generation  |
-| `DDPMSampler`             | Implements denoising for diffusion process       |
-| `VAE`                     | Encodes images into a latent space              |
-| `Self/Cross Attention`    | Enhances UNet and text encoding capabilities    |
+This project follows a two-stage AI pipeline:
 
----
+1. **Text Understanding & Enhancement (Chain-of-Thought Model)**
+   - The input text from the user is processed by the `ImprovedChainOfThought` transformer.
+   - The model expands the prompt with richer context and more descriptive details.  
+     *Example*: "Draw a cat" → "A fluffy white cat sitting on a wooden table, sunlight streaming through a window."
+   - This step ensures the diffusion model receives more detailed guidance for image generation.
 
-## Advanced Usage
+2. **Image Generation (Diffusion + UNet + VAE)**
+   - **Text Encoding**: The enhanced prompt is transformed into an embedding vector (using the internal text encoder of the pipeline).
+   - **Noise Initialization**: The diffusion process starts from pure Gaussian noise.
+   - **UNet Denoising**: The UNet predicts the noise at each timestep, guided by the text embedding.
+   - **DDPM Sampling**: The sampler gradually denoises the latent representation into a meaningful image.
+   - **VAE Decoding**: The latent image is decoded into full-resolution pixel space.
 
-### Multi-Turn Conversation Example
-
-```python
-pipe.context_memory = [
-    "User: Draw a soldier in a forest.",
-    "Bot: Alright, I'll create an image of a soldier hiding in a forest.",
-    "User: Now add a sunrise.",
-]
-
-img = pipe("Create a version with morning mist.")
-img.show()
+**Data Flow Diagram:**
 ```
+User Prompt
+   ↓
+Chain-of-Thought Transformer
+   ↓
+Enhanced Prompt → Text Encoder → Diffusion UNet + DDPM Sampler
+   ↓
+VAE Decoder → Final Image
+```
+
+**Why This Architecture Works:**
+- The Chain-of-Thought stage ensures vague prompts are turned into vivid descriptions, improving the guidance for the diffusion model.
+- UNet with self-attention and cross-attention layers captures both global composition and fine details.
+- The VAE enables computation in a smaller latent space, making training and inference faster without significant quality loss.
 
 ---
 
@@ -124,4 +121,4 @@ img.show()
 
 ## Author
 
-- **Developer**: Bui Nguyen Gia Bao
+- **Developer**: Bao

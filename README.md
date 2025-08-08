@@ -13,21 +13,24 @@ This project implements an AI pipeline that integrates:
 ## Directory Structure
 
 ```
-project/
-├── models/
-│   ├── attention.py         # Self-Attention and Cross-Attention mechanisms
-│   ├── transformer.py       # Transformer model for Chain-of-Thought
-│   ├── diffusion.py         # UNet and noise prediction logic
-│   └── VAen_decoder.py      # Variational Autoencoder (VAE) encoder and decoder
-├── sampler/
-│   └── ddpm.py              # Denoising Diffusion Probabilistic Model (DDPM) sampling logic
-├── COT_text_gen.py          # ImprovedChainOfThought model for text generation
-├── pipeline.py              # Image generation function (generate)
-├── train.py                 # Training script for the diffusion model
-├── vocab.txt                # Vocabulary file for the CoT model
-├── input.txt                # Sample test input file
-├── combined_pipeline.py     # Integrated pipeline combining CoT and diffusion
-└── README.md                # Project documentation
+.
+├── pipeline.py
+├── Chain_Of_Thought/
+│   └── COT_text_gen.py
+├── diffusion_model/
+│   ├── pipeline.py
+│   ├── clip.py
+│   ├── diffusion.py
+│   ├── ddpm.py
+│   ├── VAen_decoder.py
+│   └── data/
+│       └── v1-5-pruned-emaonly.ckpt   # Stable Diffusion weights
+├── model.pth
+├── diffusion_model.pth
+├── vae_encoder.pth
+├── vae_decoder.pth
+├── clip_model.pth
+├── output.png
 ```
 
 ---
@@ -39,8 +42,15 @@ project/
 ```bash
 pip install torch torchvision transformers tqdm
 ```
+### 2.  Download Pretrained Weights
+Stable Diffusion v1.5 Checkpoint:
+Download from Hugging Face(https://huggingface.co/stable-diffusion-v1-5/stable-diffusion-v1-5/tree/main)
 
-### 2. Model Initialization
+Save file v1-5-pruned-emaonly.ckpt into:
+```bash
+diffusion_model/data/v1-5-pruned-emaonly.ckpt
+```
+### 3. Model Initialization
 
 ```python
 from COT_text_gen import ImprovedChainOfThought
@@ -114,12 +124,11 @@ VAE Decoder → Final Image
 ## Notes
 
 - **Hardware Requirements**: A GPU with at least 8GB VRAM is recommended for efficient diffusion model inference.
-- **Training**: To retrain the diffusion model, use the `train.py` script.
 - **Data Files**: Ensure `vocab.txt` (CoT vocabulary) and `input.txt` (test inputs) are available in the project directory.
 
 ---
 
 ## Author
 
-- **Developer**: Bao
+- **Developer**: Bùi Nguyễn Gia BẢO 
 
